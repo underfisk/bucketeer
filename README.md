@@ -1,5 +1,5 @@
 # Bucketeer
-A file management desktop application inspired by Google drive using AWS S3, Angular 9 and AWS Cognito
+A file management desktop application inspired by Google drive using AWS S3, Angular 10 and AWS Cognito
 The UI is similar to Google drive trying to make an alternative personal application using my private S3 buckets
 to sync locally with my computer
 
