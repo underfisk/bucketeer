@@ -5,6 +5,7 @@ import {
   CognitoUser,
   CognitoUserAttribute,
 } from "amazon-cognito-identity-js"
+import {Observable, of} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +20,9 @@ export class AuthService {
   }
 
   isAuthenticated() {
-    return this.userPool.getCurrentUser() !== null;
+    return !!this.userPool.getCurrentUser();
   }
+  
   getCurrentUser() {
     return this.userPool.getCurrentUser();
   }
@@ -37,8 +39,8 @@ export class AuthService {
     email: string,
     password: string,
     phone?: string
-  ): Promise<{ success: boolean; error?: string }> {
-    return new Promise((resolve) => {
+  ){
+    return new Observable(subscriber=> {
       this.userPool.signUp(
         email,
         password,
@@ -49,20 +51,16 @@ export class AuthService {
         [],
         async (err, res) => {
           if (err) {
-            console.error(err);
-            return resolve({ success: false, error: err.message });
+            return subscriber.error(err.message)
           }
-          console.log(res)
-          resolve({ success: true });
+          subscriber.complete()
         }
       );
-    });
+    })
   }
 
-  signIn(email: string, password: string): Promise<{ success: boolean, error?: string}>{
-    try {
-      return new Promise((resolve) => {
-        console.log("Authenticating..")
+  signIn(email: string, password: string){
+      return new Observable(subscriber=> {
         const cognitoUser = new CognitoUser({
           Username: email,
           Pool: this.userPool,
@@ -73,19 +71,15 @@ export class AuthService {
         })
         cognitoUser.authenticateUser(authenticationDetails, {
           onSuccess: () => {
-            resolve({ success: true });
+            subscriber.complete()
           },
           onFailure: (err) => {
-            resolve({ success: false, error: err });
+            subscriber.error(err.message)
           },
           newPasswordRequired: () => {
-            resolve({ success: false, error: "Please reset your password" });
+            subscriber.error("Please reset your password" )
           },
         });
       })
-    }
-    catch(ex){
-
-    }
   }
 }

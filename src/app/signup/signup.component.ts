@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
+import { Component } from '@angular/core';
+import { Validators, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth-service/auth.service';
 
@@ -8,7 +8,7 @@ import { AuthService } from '../core/services/auth-service/auth.service';
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css']
 })
-export class SignupComponent implements OnInit {
+export class SignupComponent {
   emailFormControl = new FormControl('', [
     Validators.required,
     Validators.email,
@@ -18,32 +18,38 @@ export class SignupComponent implements OnInit {
     Validators.minLength(8),
   ]);
 
+  isCreating: boolean
+  latestError?: string
   constructor(
     private readonly router: Router,
-    private readonly cognitoService: AuthService,
-    private readonly formBuilder: FormBuilder
+    private readonly cognitoService: AuthService
   ) { 
   }
-
-  ngOnInit(): void {
-  }
-
   async onSubmit(){
-
     const email = this.emailFormControl.value
     const password = this.passwordFormControl.value
-    const result = await this.cognitoService.signUp(email, password)
-    if (!result.success){
-      return console.error(result.error)
-    }
-    
-    const authResult = await this.cognitoService.signIn(email, password)
-    console.log("Authenticated?")
-    console.log(authResult)
-    if (authResult.success){
-        this.router.navigate(['/'])
-    } else {
-        console.error("No auth")
-    }
+    this.isCreating = true
+    this.cognitoService.signUp(email, password)
+      .subscribe({
+        error: error => {
+          setTimeout(() => this.latestError = undefined, 2000)
+          this.isCreating = false
+          return this.latestError = error
+        },
+        complete: () => {
+          this.cognitoService.signIn(email,password)
+            .subscribe({
+              error: error => {
+                setTimeout(() => this.latestError = undefined, 2000)
+                this.isCreating = false
+                return this.latestError = error
+              },
+              complete: () => {
+                this.isCreating = false
+                return this.router.navigate(['/'])
+              }
+            })
+        }
+      })
   }
 }

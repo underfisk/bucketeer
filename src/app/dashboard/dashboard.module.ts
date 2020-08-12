@@ -7,7 +7,7 @@ import { DashboardComponent } from './dashboard.component';
 import { SharedModule } from '../shared/shared.module';
 import { AuthService } from '../core/services/auth-service/auth.service';
 import { StorageService } from '../core/services/storage/storage.service'
-import { MaterialModule } from 'app/shared/material.module';
+import { MaterialModule } from '../shared/material.module';
 import { SpaceUsedPipe } from './pipes/space-used-pipe'
 import { CloudExplorerModule } from '../cloud-explorer/cloud-explorer.module'
 import { LocalExplorerModule } from '../local-explorer/local-explorer.module'

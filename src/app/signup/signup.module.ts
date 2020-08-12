@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 
 import { SharedModule } from '../shared/shared.module';
 import { SignupComponent } from './signup.component'
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap'
 import { AuthService } from '../core/services/auth-service/auth.service'
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -16,7 +15,6 @@ import { MaterialModule } from '../shared/material.module';
   imports: [
       CommonModule, 
       SharedModule,
-      NgbModule,
       ReactiveFormsModule,
       RouterModule,
       MatFormFieldModule,

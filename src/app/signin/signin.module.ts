@@ -7,7 +7,7 @@ import { AuthService } from '../core/services/auth-service/auth.service'
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field'
-import { MaterialModule } from 'app/shared/material.module';
+import { MaterialModule } from '../shared/material.module';
 
 @NgModule({
   declarations: [SigninComponent],

@@ -1,47 +1,42 @@
-
-  <div *ngIf="isLoading">
-    Fethching your data...
-  </div>
-  <div *ngIf="!isLoading">
-    <mat-sidenav-container class="example-container" *ngIf="true">
-      <input 
-        hidden
-        type="file" 
-        multiple 
-        (change)="onFileUpload($event)" 
-        #fileInput
-        />
-      <mat-sidenav opened mode="side">
-        <mat-selection-list [multiple]="false"> 
-          <mat-list-option (click)="fileInput.click()" >
-          <mat-icon matListIcon>upload</mat-icon>
-            Upload File
-          </mat-list-option >
-          <mat-list-option (click)="onLocalClick()">
-            <mat-icon matListIcon>folder</mat-icon>
-            My files
-          </mat-list-option >
-          <mat-list-option (click)="onCloudClick()">
-            <mat-icon matListIcon>cloud</mat-icon>
-            Cloud
-          </mat-list-option >
-          <mat-list-option (click)="onBinClick()">
-          <mat-icon matListIcon>bin</mat-icon>
-            Bin
-          </mat-list-option >
-          <mat-divider></mat-divider>
-          <mat-list-option>
-            Storage space used ({{ (cloudStorage$ | async | spaceUsed) }})
-          </mat-list-option >
-          <mat-divider></mat-divider>
-          <mat-list-option (click)="onSignOut()">
-            <mat-icon matListIcon>logout</mat-icon>
-            Sign out
-          </mat-list-option >
+<mat-sidenav-container class="nav-container">
+  <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+    <input
+            hidden
+            type="file"
+            multiple
+            (change)="onFileUpload($event)"
+            #fileInput
+    />
+    <mat-sidenav opened mode="side">
+        <mat-selection-list [multiple]="false">
+            <mat-list-option [disabled]="isLoading" (click)="fileInput.click()">
+                <mat-icon matListIcon>upload</mat-icon>
+                Upload File
+            </mat-list-option>
+            <mat-list-option (click)="onLocalClick()">
+                <mat-icon matListIcon>folder</mat-icon>
+                My files
+            </mat-list-option>
+            <mat-list-option [disabled]="isLoading" (click)="onCloudClick()">
+                <mat-icon matListIcon>cloud</mat-icon>
+                Cloud
+            </mat-list-option>
+            <mat-list-option [disabled]="isLoading" (click)="onBinClick()">
+                <mat-icon matListIcon>bin</mat-icon>
+                Bin
+            </mat-list-option>
+            <mat-divider></mat-divider>
+            <mat-list-option>
+                Storage space used ({{ (cloudStorage$ | async | spaceUsed) }})
+            </mat-list-option>
+            <mat-divider></mat-divider>
+            <mat-list-option (click)="onSignOut()">
+                <mat-icon matListIcon>logout</mat-icon>
+                Sign out
+            </mat-list-option>
         </mat-selection-list>
-      </mat-sidenav>
-      <router-outlet></router-outlet>
-      </mat-sidenav-container>
-      </div>
+    </mat-sidenav>
+    <router-outlet></router-outlet>
+</mat-sidenav-container>
       
       

@@ -3,9 +3,8 @@
     <h2>Sign in</h2>
     <mat-form-field class="example-full-width">
       <mat-label>Email</mat-label>
-      <input type="email" matInput [formControl]="emailFormControl" [errorStateMatcher]="matcher"
+      <input autofocus type="email" matInput [formControl]="emailFormControl" [errorStateMatcher]="matcher"
             placeholder="Ex. pat@example.com">
-      <mat-hint>Errors appear instantly!</mat-hint>
       <mat-error *ngIf="emailFormControl.hasError('email') && !emailFormControl.hasError('required')">
         Please enter a valid email address
       </mat-error>
@@ -17,7 +16,6 @@
       <mat-label>Password</mat-label>
       <input matInput  type="password" [formControl]="passwordFormControl" [errorStateMatcher]="matcher"
             placeholder="*****">
-      <mat-hint>Password must contain 8 characters at least</mat-hint>
       <mat-error *ngIf="passwordFormControl.hasError('password') && !passwordFormControl.hasError('required')">
         Please enter a valid password
       </mat-error>
@@ -25,8 +23,18 @@
         Passsword is <strong>required</strong>
       </mat-error>
     </mat-form-field>
-    
-    <button mat-raised-button color="primary" [disabled]="passwordFormControl.hasError('password') || emailFormControl.hasError('email')">Proceed</button>
+    <p *ngIf="latestError" class="error-text">{{ latestError }}</p>
+    <mat-spinner *ngIf="isAuthenticating" diameter="30" [ngStyle]="{margin: 'auto'}"></mat-spinner>
+    <mat-checkbox (change)="onRememberChange($event.checked)" [checked]="isRememberChecked">Remember me</mat-checkbox>
+
+    <button
+            *ngIf="!isAuthenticating"
+            mat-raised-button
+            color="primary"
+            [disabled]="passwordFormControl.errors || emailFormControl.errors || isAuthenticating"
+    >
+      Sign In
+    </button>
     <div class="mat-h3">Need an account? <b><a routerLink="/signup">Sign up</a></b></div>
   </form>
 </mat-card>

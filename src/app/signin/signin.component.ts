@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth-service/auth.service'
-import {FormControl, FormGroupDirective, NgForm, Validators, FormGroup, FormBuilder} from '@angular/forms';
+import {FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 import {ErrorStateMatcher} from '@angular/material/core';
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
@@ -16,7 +16,7 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
   templateUrl: './signin.component.html',
   styleUrls: ['./signin.component.css']
 })
-export class SigninComponent implements OnInit {
+export class SigninComponent implements OnInit{
   emailFormControl = new FormControl('', [
     Validators.required,
     Validators.email,
@@ -26,24 +26,45 @@ export class SigninComponent implements OnInit {
     Validators.minLength(8),
   ]);
   matcher = new MyErrorStateMatcher();
+  latestError?: string
+  isAuthenticating?: boolean
+  isRememberChecked: boolean = false
+
   constructor(
     private readonly router: Router,
-    private readonly cognitoService: AuthService,
-    private readonly formBuilder: FormBuilder
-  ) { 
+    private readonly cognitoService: AuthService
+  ) {}
 
+  onRememberChange(isChecked: boolean) {
+    this.isRememberChecked = isChecked
   }
-
-  ngOnInit(): void {
+  ngOnInit() {
+    const savedEmail = localStorage.getItem('email-remember')
+    this.isRememberChecked = !!savedEmail
+    if (savedEmail){
+      this.emailFormControl.setValue(savedEmail)
+    }
   }
 
   async onSubmit(){
-    const result = await this.cognitoService.signIn( this.emailFormControl.value, this.passwordFormControl.value)
-    if (!result.success){
-      return console.error(result.error)
-    }
-    
-    this.router.navigate(['/'])
+    this.isAuthenticating = true
+    this.cognitoService.signIn( this.emailFormControl.value, this.passwordFormControl.value)
+      .subscribe({
+          error: error => {
+            this.isAuthenticating = false
+            setTimeout(() => {
+              this.latestError = undefined
+            }, 2000)
+            return this.latestError = error
+          },
+          complete: () => {
+            if (this.isRememberChecked){
+              localStorage.setItem('email-remember', this.emailFormControl.value )
+            }
+            this.isAuthenticating = false
+            return this.router.navigate(['/'])
+          }
+      })
   }
 
 }

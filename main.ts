@@ -28,15 +28,16 @@ function createWindow(): BrowserWindow {
     height: 800,
     webPreferences: {
       nodeIntegration: true,
-      allowRunningInsecureContent: (serve) ? true : false,
+      allowRunningInsecureContent: serve,
     },
   });
 
   if (serve) {
-
-    require('devtron').install();
     win.webContents.openDevTools();
-
+    require('devtron').install();
+    installExtension(REDUX_DEVTOOLS)
+    .then((name) => console.log(`Added Extension:  ${name}`))
+    .catch((err) => console.log('An error occurred: ', err));
     require('electron-reload')(__dirname, {
       electron: require(`${__dirname}/node_modules/electron`)
     });
@@ -81,12 +82,6 @@ try {
       app.quit();
     }
   });
-
-  app.whenReady().then(() => {
-    installExtension(REDUX_DEVTOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log('An error occurred: ', err));
-  })
 
   app.on('activate', () => {
     // On OS X it's common to re-create a window in the app when the
@@ -162,6 +157,8 @@ try {
       }
       return true
   }
+    const CACHED_FOLDER_PATH = __dirname + '/__cached__'
+
 
   ipcMain.on('delete-file', async (e, args) => {
     try {
@@ -178,7 +175,7 @@ try {
 
     ipcMain.on('close-directory', () => {
       if (activeWatcher){
-        activeWatcher.close()
+        return activeWatcher.close()
       }
     })
 
@@ -247,6 +244,27 @@ try {
         })
 
         e.sender.send('directory-loaded', { files, folders })
+    })
+
+    // ipcMain.on('fetch-cached-file', async (e, args) => {
+    //   console.log("Fetching cached file")
+    //   const cachedFile = fs.readFileSync(path.join(CACHED_FOLDER_PATH, '/' + args.key ))
+    //   if (cachedFile){
+    //     console.log("CACHED KEY FOUND")
+    //     console.log(cachedFile)
+    //   }
+    //   e.sender.send('fetch-cached-file-complete', { key: args.key, data: cachedFile })
+    // })
+    ipcMain.on('cache-file-locally',  (e, args) => {
+      console.log("Saving in cache")
+      // try {
+      //   fs.writeFileSync(path.join(CACHED_FOLDER_PATH, '/' + args.key), args.data)
+      //   e.sender.send('save-cached-file-complete')
+      // }
+      // catch(ex){
+      //   console.error("Fail caching")
+      //   e.sender.send('save-cached-file-error')
+      // }
     })
   })
 } catch (e) {

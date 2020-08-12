@@ -1,26 +1,30 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FileUpload } from 'app/dashboard/dashboard.component';
+import { FileUpload } from '../dashboard/dashboard.component';
 import { Observable, Subject } from 'rxjs';
-import { CloudStorage } from 'app/store/cloud-storage/cloud-storage.interface';
-import { StorageFile } from 'app/core/services/storage/storage.interfaces';
+import { CloudStorage } from '../store/cloud-storage/cloud-storage.interface';
+import { StorageFile } from '../core/services/storage/storage.interfaces';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort, Sort } from '@angular/material/sort';
 import { ContextMenuComponent } from 'ngx-contextmenu';
 import { Router } from '@angular/router';
-import { AuthService } from 'app/core/services/auth-service/auth.service';
-import { StorageService } from 'app/core/services/storage/storage.service';
+import { AuthService } from '../core/services/auth-service/auth.service';
+import { StorageService } from '../core/services/storage/storage.service';
 import { Store, select } from '@ngrx/store';
-import { IRootStore } from 'app/store';
+import { IRootStore } from '../store';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { RenameFileNameDialog, RenameFileData } from 'app/dialogs/rename-file-dialog/rename-file.component';
-import { PreviewImageDialog } from 'app/dialogs/preview-image-dialog/preview-image-dialog';
-import getClassNameForExtension from 'app/dashboard/file-extensions';
-import { initializeStorage, fileUploaded } from 'app/store/cloud-storage/cloud-storage.actions';
+import { RenameFileNameDialog, RenameFileData } from '../dialogs/rename-file-dialog/rename-file.component';
+import { PreviewImageDialog } from '../dialogs/preview-image-dialog/preview-image-dialog';
+import getClassNameForExtension from '../dashboard/file-extensions';
+import { initializeStorage, fileUploaded } from '../store/cloud-storage/cloud-storage.actions';
 import { take } from 'rxjs/operators';
 import { v4 } from 'uuid';
-import { convertBytes } from 'app/core/services/storage/file.utils';
+import { convertBytes } from '../core/services/storage/file.utils';
 import dayjs from 'dayjs';
+import {CacheService} from "../core/services/cache/cache.service";
+import {ElectronService} from "../core/services";
+import fs from "fs";
+import path from "path";
 
 @Component({
   selector: 'app-cloud-explorer',
@@ -47,54 +51,30 @@ export class CloudExplorerComponent implements OnInit {
     private readonly storageService: StorageService,
     private readonly store: Store<IRootStore>,
     private _snackBar: MatSnackBar,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private readonly electronService: ElectronService,
   ) { 
     this.cloudStorage$ = store.pipe(select('cloudStorage'));
     this.files = store.select(state => state.cloudStorage.files)
     this.fileUploadQueue$.subscribe(file => this.processFileOfQueue(file))
+
   }
 
-  openDialog(file: StorageFile): void {
-    const dialogRef = this.dialog.open(RenameFileNameDialog, {
-      width: '250px',
-      data: {name: file?.name || "", key: file?.key || "" }
-    });
+  ngOnInit(): void {
+    this.electronService.ipcRenderer.on('fetch-cached-file-complete', data => {
+      console.log("Feteched data")
+      console.log(data)
+    })
 
-    dialogRef.afterClosed().subscribe((result: RenameFileData) => {
-      console.log('The dialog was closed');
-      console.log(result)
-      /**@todo Check if the name is equal and also save the extension from the original name (on the key) */
-    });
-  }
-  showMessage(file: StorageFile) {
-    this.openDialog(file)
-  }
+    this.electronService.ipcRenderer.on('save-cached-file-complete', () => {
+      console.warn("SAVED")
+    })
 
-  openFile(file: StorageFile) {
-    console.log("Open te file")
-    console.log(file)
-    if (file.extension.includes('jpg') || file.extension.includes('png')){
-      console.log("Its valid")
-      this.openImagePreview(file)
-    }
-  }
+    this.electronService.ipcRenderer.on('save-cached-file-error', () => {
+      console.error("ERROR CACHING")
+    })
 
-  /**@todo Download the file because its small so we can "cache it locally"  */
-  async openImagePreview(img: StorageFile){
-    const body = await this.storageService.getObjectBody(img.key)
-    // const body = await this.storageService.getObjectBody("eu-west-2:1fdf2733-7ebe-43ca-b859-de2164d2e422/Screenshot from 2020-04-27 18-33-50.png")
-    if (!body){
-      return console.error("Something went wrong")
-    }
-    const dialogRef = this.dialog.open(PreviewImageDialog, {
-      data: { body, name: img.name }
-    });
 
-    dialogRef.afterClosed().subscribe(result => {
-      console.log(`Dialog result: ${result}`);
-    });
-  }
-  ngOnInit(): void { 
     this.dataSource.sort = this.sort;
     this.files.subscribe(files => {
       this.dataSource.data = files.map(e => ({
@@ -104,6 +84,51 @@ export class CloudExplorerComponent implements OnInit {
       }))
     })
   }
+
+  openDialog(file: StorageFile): void {
+    const dialogRef = this.dialog.open(RenameFileNameDialog, {
+      width: '250px',
+      data: {name: file?.name || "", key: file?.key || "" }
+    });
+
+    dialogRef.afterClosed().subscribe((result?: RenameFileData) => {
+      console.log('The dialog was closed');
+      console.log(result)
+      /**@todo Check if the name is equal and also save the extension from the original name (on the key) */
+    });
+  }
+
+  showMessage(file: StorageFile) {
+    this.openDialog(file)
+  }
+
+  async openFile(file: StorageFile) {
+    console.log({file})
+    //Handle images
+    if (file.extension.match(/(jpg|jpeg|png|gif)$/i)) {
+      return this.openImagePreview(file)
+    }
+  }
+
+  /**@todo Download the file because its small so we can "cache it locally"  */
+  async openImagePreview(file: StorageFile){
+    //Check if is cached
+    // this.electronService.ipcRenderer.send('fetch-cached-file')
+    const body = await this.storageService.getObjectBody(file.key)
+    if (!body){
+      return console.error("Something went wrong")
+    }
+    console.warn("SAVING IN CACHE")
+    this.electronService.ipcRenderer.send('cache-file-locally', { key: file.key, data: body })
+    const dialogRef = this.dialog.open(PreviewImageDialog, {
+      data: { body, name: file.name }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(`Dialog result: ${result}`);
+    });
+  }
+
 
 
   async onFileUpload(event: any){

@@ -3,9 +3,8 @@
     <h2>Sign up</h2>
     <mat-form-field class="example-full-width">
       <mat-label>Email</mat-label>
-      <input type="email" matInput [formControl]="emailFormControl" [errorStateMatcher]="matcher"
+      <input type="email" matInput [formControl]="emailFormControl"
             placeholder="Ex. pat@example.com">
-      <mat-hint>Errors appear instantly!</mat-hint>
       <mat-error *ngIf="emailFormControl.hasError('email') && !emailFormControl.hasError('required')">
         Please enter a valid email address
       </mat-error>
@@ -15,7 +14,7 @@
     </mat-form-field>
     <mat-form-field class="example-full-width">
       <mat-label>Password</mat-label>
-      <input matInput  type="password" [formControl]="passwordFormControl" [errorStateMatcher]="matcher"
+      <input matInput  type="password" [formControl]="passwordFormControl"
             placeholder="*****">
       <mat-hint>Password must contain 8 characters at least</mat-hint>
       <mat-error *ngIf="passwordFormControl.hasError('password') && !passwordFormControl.hasError('required')">
@@ -25,8 +24,9 @@
         Passsword is <strong>required</strong>
       </mat-error>
     </mat-form-field>
-    
-    <button mat-raised-button color="primary" [disabled]="passwordFormControl.hasError('password') || emailFormControl.hasError('email')">Create</button>
+    <p *ngIf="latestError" class="error-text">{{ latestError }}</p>
+    <mat-spinner *ngIf="isCreating" diameter="30" [ngStyle]="{margin: 'auto'}"></mat-spinner>
+    <button *ngIf="!isCreating" mat-raised-button color="primary" [disabled]="passwordFormControl.errors || emailFormControl.errors">Create</button>
     <button mat-raised-button  routerLink="/signin" >Back</button>
   </form>
 </mat-card>

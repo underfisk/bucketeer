@@ -11,6 +11,15 @@
         "build": {
           "builder": "@angular-builders/custom-webpack:browser",
           "options": {
+            "allowedCommonJsDependencies": [
+              "aws-sdk",
+              "crypto-js/enc-base64",
+              "crypto-js/hmac-sha256",
+              "js-cookie",
+              "dotenv",
+              "crypto-js/lib-typedarrays",
+              "crypto-js/sha256"
+            ],
             "outputPath": "dist",
             "index": "src/index.html",
             "main": "src/main.ts",

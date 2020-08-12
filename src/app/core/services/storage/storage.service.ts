@@ -4,7 +4,7 @@ import {  StorageUploadFile, StorageFolder, StorageFile } from './storage.interf
 import dayjs from 'dayjs'
 import { convertBytes, getFileExtension } from './file.utils'
 import rxjs from 'rxjs'
-import { FileUpload } from 'app/dashboard/dashboard.component';
+import { FileUpload } from '../../../dashboard/dashboard.component';
 
 @Injectable({
   providedIn: 'root'
@@ -16,22 +16,9 @@ export class StorageService {
   private readonly region = process.env.S3_REGION
   private s3!: AWS.S3
 
-  constructor() {
-    //Build S3 object
-  }
 
   getAdapter() {
       return this.s3
-  }
-
-  
-  getConfigForElectron(){
-      return {
-          bucket: this.bucketName,
-          idToken: this.idToken,
-          identityId: this.getIdentityId(),
-          region: this.region,
-      }
   }
 
   setIdentityId(id: string){
@@ -68,7 +55,6 @@ export class StorageService {
 
   async getRootObjects(): Promise<{ fileObjects: AWS.S3.Object[], foldersObjects: AWS.S3.CommonPrefixList, deletedFiles: AWS.S3.DeleteMarkerEntry[] }>{
       try {
-   
           const data = await this.s3.listObjectsV2({  
               Bucket: this.bucketName, 
               Prefix: this.getIdentityId() + "/", Delimiter: '/',
@@ -79,11 +65,9 @@ export class StorageService {
               Prefix:this.getIdentityId() + "/" 
           }).promise()
           const latestDeleted = deleted.DeleteMarkers?.filter(e => e.IsLatest) || []
-          console.log(latestDeleted)
           return { fileObjects: data.Contents ?? [], foldersObjects: data.CommonPrefixes ?? [], deletedFiles: latestDeleted}
       }
       catch(ex){
-          console.error(ex)
           return { fileObjects: [], foldersObjects: [], deletedFiles: []} 
       }
   }
@@ -203,7 +187,6 @@ export class StorageService {
             Bucket: this.bucketName,
             Key: key,
         }).promise()
-            console.log(result)
         return result.Body
       }
       catch(ex){

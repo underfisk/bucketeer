@@ -4,7 +4,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { DashboardComponent } from './dashboard.component';
 import { AuthGuard } from '../core/services/auth-service/auth.guard';
 import { LocalExplorerComponent } from '../local-explorer/local-explorer.component';
-import { CloudExplorerComponent } from 'app/cloud-explorer/cloud-explorer.component';
+import { CloudExplorerComponent } from '../cloud-explorer/cloud-explorer.component';
 
 const routes: Routes = [
   {
